@@ -1,0 +1,17 @@
+version: '3'
+services:
+  minio:
+    image: minio/minio:RELEASE.2023-03-24T21-41-23Z
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - ./minio-data:/data
+    environment:
+      MINIO_ACCESS_KEY: test
+      MINIO_SECRET_KEY: test12334567
+    command: server /data --console-address ":9001"
+
+volumes:
+  minio-data:
+    driver: local
