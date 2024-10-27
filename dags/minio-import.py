@@ -31,7 +31,7 @@ BASE_DIR = tempfile.gettempdir()
 minio_connection = BaseHook.get_connection('minio')
 host = minio_connection.host + ':' + str(minio_connection.port)
 
-LOCAL_DOWNLOAD = '/home/leanderson/Documents/PPGTI - Mestrado Profissional/Projeto PPGTI/dags/'
+LOCAL_DOWNLOAD = './downloads/'
 
 client = Minio(host, secure=False, access_key=minio_connection.login, secret_key=minio_connection.password)
 
