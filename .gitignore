@@ -167,3 +167,5 @@ minio-data/
 # Airflow
 logs/
 .env
+
+.idea/
