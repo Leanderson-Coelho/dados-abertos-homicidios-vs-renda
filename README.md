@@ -48,17 +48,6 @@ The webserver is available at: http://localhost:8080
 
 - [Caso aconteça algum erro e precisar reiniciar o processo use este link para apagar os containers](https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html#cleaning-up-the-environment)
 
-#### Configurar Connection do MinIO
-
-No menu `Admin -> Connections` adicionar uma nova connection com o id exatamente igual a `minio` como segue na imagem:
-
-`Login:` test
-`Password:` test12334567
-
-![](./images/connection.jpeg)
-
-**Salvar**
-
 ## Integrantes
 
 Leanderson, Nathália, Allan
