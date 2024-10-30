@@ -10,6 +10,10 @@ from airflow.decorators import task
 URI = "https://www.ipea.gov.br/atlasviolencia/api/v1/valores-series/328/3"
 BUCKET = "ppgti"
 
+URI_IBGE = "https://servicodados.ibge.gov.br/api/v1/pesquisas/-/indicadores/80663/resultados/N3"
+
+URI_IBGE_Localidade ="https://servicodados.ibge.gov.br/api/v1/localidades/estados"
+
 minio_connection = BaseHook.get_connection('minio')
 host = minio_connection.host + ':' + str(minio_connection.port)
 
@@ -53,10 +57,33 @@ with DAG(
 
     ipea_donwload_step = ipea_donwload()
 
+    @task(task_id="IBGE-download")
+    def IBGE_donwload():
+        print("IBGE_donwload")
+        response = request("GET", URI_IBGE)
+
+        json_object = json.dumps(response.json(), indent=2)
+
+        # Writing to sample.json
+        with open("indicadores_10070_8.1.2.1.1.json", "w") as outfile:
+            outfile.write(json_object)
+
+        response = request("GET", URI_IBGE_Localidade)
+
+        json_object = json.dumps(response.json(), indent=2)
+
+        # Writing to sample.json
+        with open("Localidades.json", "w") as outfile:
+            outfile.write(json_object)
+
+    IBGE_donwload_step = IBGE_donwload()
+
     @task(task_id="enviar-para-minio")
     def enviar_para_minio():
         print("enviar_para_minio")
         client.fput_object(BUCKET, "transient/series-328-3.json", "series-328-3.json")
+        client.fput_object(BUCKET, "transient/indicadores_10070_8.1.2.1.1.json", "indicadores_10070_8.1.2.1.1.json")
+        client.fput_object(BUCKET, "transient/Localidades.json", "Localidades.json")
 
     enviar_para_minio_step = enviar_para_minio()
 
@@ -69,9 +96,23 @@ with DAG(
         else:
             print(f"File series-328-3.json not found.")
 
+        if os.path.exists("indicadores_10070_8.1.2.1.1.json"):
+            os.remove("indicadores_10070_8.1.2.1.1.json")
+            print(f"File indicadores_10070_8.1.2.1.1.json deleted successfully.")
+        else:
+            print(f"File indicadores_10070_8.1.2.1.1.json not found.")
+        
+        if os.path.exists("Localidades.json"):
+            os.remove("Localidades.json")
+            print(f"File Localidades.json deleted successfully.")
+        else:
+            print(f"File Localidades.json not found.")
+
     limpar_dados_step = limpar_dados()
 
 verificar_conexao_minio_step >> verificar_bucket_step
 verificar_bucket_step >> ipea_donwload_step
 ipea_donwload_step >> enviar_para_minio_step
+verificar_bucket_step >> IBGE_donwload_step
+IBGE_donwload_step >> enviar_para_minio_step
 enviar_para_minio_step >> limpar_dados_step
