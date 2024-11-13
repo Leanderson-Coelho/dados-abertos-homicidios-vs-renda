@@ -9,6 +9,7 @@ from datetime import datetime
 import re
 import json
 import os
+from fastavro import writer, parse_schema, reader
 
 REGEX_DATA_IPEA = r'^\d{4}-\d{2}-\d{2}$'
 client = obter_conexao_minio()
@@ -19,7 +20,7 @@ SIGLAS_VALIDAS = [
 ]
 
 with DAG(
-    dag_id="validacao",
+    dag_id="trusted-dag",
     schedule=None,
     start_date=datetime(2020, 1, 1),
     catchup=False,
@@ -82,8 +83,73 @@ with DAG(
 
     filtrar_dados_invalidos_ipea_step = filtrar_dados_invalidos_ipea()
 
+    @task(task_id="filtrar-dados-invalidos-IBGE")
+    def filtrar_dados_invalidos_IBGE():
+        print("filtrar_dados_invalidos_IBGE")
+        lista_valida = []
+        try:
+            response = client.get_object(BUCKET, f"{RAW_LAYER}/indicadores_10070_8.1.2.1.1.json")
+            print(response.json())
+            response_Localidades = client.get_object(BUCKET, f"{RAW_LAYER}/Localidades.json")
+            print(response_Localidades.json())
+
+            Localidades = {}
+            for item in response_Localidades.json():
+                Localidades[str(item["id"])]=item
+            
+            for item in response.json()[0]["res"]:
+                item_valido = {}
+                item_valido ["localidade"] = item ["localidade"]
+                item_valido ["res"] = {}
+                Localidade=Localidades[item["localidade"]]
+                item_valido["sigla"]=Localidade["sigla"]
+                item_valido["nome"]=Localidade["nome"]
+                for ano in item ["res"]:
+                    try:
+                        valor = int (item["res"][ano])
+                        if valor < 0:
+                            continue
+                        item_valido ["res"][ano] = valor
+                    except ValueError:
+                        continue
+                if len(item_valido["res"]) == 0:
+                    continue
+                lista_valida.append(item_valido)
+
+            # specifying the avro schema
+            schema = {
+                'name': 'Renda',
+                'namespace': 'IBGE',
+                'type': 'record',
+                'fields': [
+                    {'name': 'localidade', 'type': 'string'},
+                    {'name': 'res', 'type': {"type":'map', "values":"int"}},
+                    {'name': 'sigla', 'type': 'string'},
+                    {'name': 'nome', 'type': 'string'}
+                ]
+            }
+            parsed_schema = parse_schema(schema)
+            with open("indicadores_10070_8.1.2.1.1.avro", 'wb') as arquivo_avro:
+                writer(arquivo_avro, parsed_schema, lista_valida)
+
+            client.fput_object(BUCKET, f"{TRUSTED_LAYER}/indicadores_10070_8.1.2.1.1.avro", "indicadores_10070_8.1.2.1.1.avro")
+
+            if os.path.exists("indicadores_10070_8.1.2.1.1.avro"):
+                os.remove("indicadores_10070_8.1.2.1.1.avro")
+                print(f"File indicadores_10070_8.1.2.1.1.avro deleted successfully.")
+
+
+        finally:
+            response.close()
+            response.release_conn()
+            response_Localidades.close()
+            response_Localidades.release_conn()
+
+    filtrar_dados_invalidos_IBGE_step=filtrar_dados_invalidos_IBGE()
+
 verificar_conexao_minio_step >> verificar_bucket_step
 verificar_bucket_step >> filtrar_dados_invalidos_ipea_step
+verificar_bucket_step >> filtrar_dados_invalidos_IBGE_step
 
 
 

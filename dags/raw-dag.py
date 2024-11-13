@@ -31,13 +31,17 @@ with DAG(
     def mover_dados_ipea_raw():
         print("mover_dados_ipea_raw")
         client.copy_object(BUCKET, f"{RAW_LAYER}/series-328-3.json",
-                           CopySource(BUCKET, f"{TRANSIENT_LAYER}/series-328-3.json"))
+                        CopySource(BUCKET, f"{TRANSIENT_LAYER}/series-328-3.json"))
 
 
     mover_dados_ipea_raw_step = mover_dados_ipea_raw()
 
     def mover_dados_ibge_raw():
         print("mover_dados_ibge_raw")
+        client.copy_object(BUCKET, f"{RAW_LAYER}/indicadores_10070_8.1.2.1.1.json", CopySource(BUCKET, f"{TRANSIENT_LAYER}/indicadores_10070_8.1.2.1.1.json"))
+        client.copy_object(BUCKET, f"{RAW_LAYER}/Localidades.json", CopySource(BUCKET, f"{TRANSIENT_LAYER}/Localidades.json"))
+        client.copy_object(BUCKET, f"{RAW_LAYER}/Renda_01_15.json", CopySource(BUCKET, f"{TRANSIENT_LAYER}/Renda_01_15.json"))
+        client.copy_object(BUCKET, f"{RAW_LAYER}/Renda_96_06_grande_regiao.json", CopySource(BUCKET, f"{TRANSIENT_LAYER}/Renda_96_06_grande_regiao.json"))
 
     mover_dados_ibge_raw_step = mover_dados_ibge_raw()
 

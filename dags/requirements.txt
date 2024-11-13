@@ -3,3 +3,4 @@ pendulum
 pandas
 minio
 datetime
+fastavro

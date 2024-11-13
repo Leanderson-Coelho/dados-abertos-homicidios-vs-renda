@@ -144,21 +144,9 @@ with DAG(
 
     limpar_dados_step = limpar_dados()
 
-    @task(task_id="Enviar_para_Raw")
-    def Enviar_para_Raw():
-        print("Enviar_para_Raw")
-        client.copy_object(BUCKET, "transient/series-328-3.json", "raw/series-328-3.json")
-        client.copy_object(BUCKET, "transient/indicadores_10070_8.1.2.1.1.json", "raw/indicadores_10070_8.1.2.1.1.json")
-        client.copy_object(BUCKET, "transient/Localidades.json", "raw/Localidades.json")
-        client.copy_object(BUCKET, "transient/Renda_01_15.json", "raw/Renda_01_15.json")
-        client.copy_object(BUCKET, "transient/Renda_96_06_grande_regiao.json", "raw/Renda_96_06_grande_regiao.json")
-
-    Enviar_para_Raw_step = Enviar_para_Raw
-
 verificar_conexao_minio_step >> verificar_bucket_step
 verificar_bucket_step >> ipea_donwload_step
 ipea_donwload_step >> Enviar_para_Transient_step
 verificar_bucket_step >> IBGE_donwload_step
 IBGE_donwload_step >> Enviar_para_Transient_step
 Enviar_para_Transient_step >> limpar_dados_step
-limpar_dados_step >> Enviar_para_Raw_step
