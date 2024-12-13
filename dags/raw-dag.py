@@ -35,7 +35,7 @@ with DAG(
 
 
     mover_dados_ipea_raw_step = mover_dados_ipea_raw()
-
+    @task(task_id="mover-dados-ibge")
     def mover_dados_ibge_raw():
         print("mover_dados_ibge_raw")
         client.copy_object(BUCKET, f"{RAW_LAYER}/indicadores_10070_8.1.2.1.1.json", CopySource(BUCKET, f"{TRANSIENT_LAYER}/indicadores_10070_8.1.2.1.1.json"))
@@ -49,7 +49,7 @@ with DAG(
 
 verificar_conexao_minio_step >> verificar_bucket_step
 verificar_bucket_step >> mover_dados_ipea_raw_step
-# verificar_bucket_step >> mover_dados_ibge_raw_step
+verificar_bucket_step >> mover_dados_ibge_raw_step
 
 
 if __name__ == "__main__":
