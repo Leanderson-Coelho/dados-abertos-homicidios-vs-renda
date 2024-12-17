@@ -1,0 +1,67 @@
+services:
+
+  hive-metastore:
+    image: 'bitsondatadev/hive-metastore:latest'
+    hostname: hive-metastore
+    ports:
+      - '9083:9083' # Metastore Thrift
+    volumes:
+      - ./metastore_conf/metastore-site.xml:/opt/apache-hive-metastore-3.0.0-bin/conf/metastore-site.xml:ro
+    environment:
+      METASTORE_DB_HOSTNAME: mariadb
+    depends_on:
+      - mariadb
+    networks:
+      - trino-network
+
+  trino:
+    image: trinodb/trino:410
+    hostname: trino_container 
+    ports:
+      - 8080:8080 
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog
+    networks:
+      - trino-network
+    depends_on: 
+      - minio 
+      - hive-metastore 
+
+  trino-setup:
+    build: ./cli 
+    restart: "no"
+    networks:
+      - trino-network
+    depends_on:
+      - trino
+  
+  metabase:
+    image: metabase/metabase:v0.45.3
+    ports:
+      - "3000:3000"
+    networks:
+      - trino-network
+    volumes:
+      - ./metabase/plugins:/plugins
+      - ./metabase/data:/metabase-data
+    environment:
+      MB_PLUGINS_DIR: /plugins 
+      MB_DB_FILE: /metabase-data/metabase.db
+    depends_on:
+      - trino
+
+volumes:
+  trino:
+    driver: local
+  metastore_conf:
+    driver: local
+  minio-data:
+    driver: local
+  metabase:
+    driver: local 
+  cli:
+    driver: local
+
+networks:
+  trino-network:
+    driver: bridge
