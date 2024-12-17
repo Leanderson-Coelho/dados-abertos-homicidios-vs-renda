@@ -66,14 +66,27 @@ with DAG(
                 print(item)
                 lista_valida.append(item)
 
-            with open("series-328-3.json", 'w') as arquivo_json:
-                json.dump(lista_valida, arquivo_json, indent=2)
+            schema = {
+                'name': 'Homicidios',
+                'namespace': 'IPEA',
+                'type': 'record',
+                'fields': [
+                    {'name': 'cod', 'type': 'string'},
+                    {'name': 'sigla', 'type': 'string'},
+                    {'name': 'valor', 'type': 'string'},
+                    {'name': 'periodo', 'type': 'string'},
+                ]
+            }
+            parsed_schema = parse_schema(schema)
+            with open("series-328-3.avro", 'wb') as arquivo_avro:
+                writer(arquivo_avro, parsed_schema, lista_valida)
 
-            client.fput_object(BUCKET, f"{TRUSTED_LAYER}/series-328-3.json", "series-328-3.json")
 
-            if os.path.exists("series-328-3.json"):
-                os.remove("series-328-3.json")
-                print(f"File series-328-3.json deleted successfully.")
+            client.fput_object(BUCKET, f"{TRUSTED_LAYER}/series-328-3.avro", "series-328-3.avro")
+
+            if os.path.exists("series-328-3.avro"):
+                os.remove("series-328-3.avro")
+                print(f"File series-328-3.avro deleted successfully.")
 
 
         finally:
