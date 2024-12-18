@@ -23,6 +23,7 @@ def obter_conexao_minio():
     minio_connection = BaseHook.get_connection('minio')
     host = minio_connection.host + ':' + str(minio_connection.port)
 
+    print(host, minio_connection.login, minio_connection.password)
     client = Minio(host, secure=False, access_key=minio_connection.login, secret_key=minio_connection.password)
 
     return client

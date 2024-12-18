@@ -298,6 +298,9 @@ services:
       MINIO_ACCESS_KEY: test
       MINIO_SECRET_KEY: test12334567
     command: server /data --console-address ":9001"
+    networks:
+      - default
+      - trino-network
 
   mariadb:
     image: 'mariadb:10.11.2'
@@ -309,6 +312,8 @@ services:
       MYSQL_USER: admin
       MYSQL_PASSWORD: admin
       MYSQL_DATABASE: metastore_db
+    networks:
+      - trino-network
 
   hive-metastore:
     image: 'bitsondatadev/hive-metastore:latest'
@@ -321,6 +326,24 @@ services:
       METASTORE_DB_HOSTNAME: mariadb
     depends_on:
       - mariadb
+    networks:
+      - trino-network
+
+
+  metabase:
+    image: metabase/metabase:v0.45.3
+    ports:
+      - "3000:3000"
+    networks:
+      - trino-network
+    volumes:
+      - ./metabase/plugins:/plugins
+      - ./metabase/data:/metabase-data
+    environment:
+      MB_PLUGINS_DIR: /plugins
+#      MB_DB_FILE: /metabase-data/metabase.db
+    depends_on:
+      - trino
 
   trino:
     image: trinodb/trino:410
@@ -332,10 +355,15 @@ services:
     depends_on: 
       - minio 
       - hive-metastore
+    networks:
+      - trino-network
+
 
   trino-setup:
     build: ./cli 
     restart: "no"
+    networks:
+      - trino-network
     depends_on:
       - trino
 
@@ -344,6 +372,12 @@ volumes:
     driver: local
   metastore_conf:
     driver: local
+  metabase:
+    driver: local
   minio-data:
     driver: local
   postgres-db-volume:
+
+networks:
+  trino-network:
+    driver: bridge

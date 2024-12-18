@@ -14,7 +14,9 @@ CREATE SCHEMA hive.refined WITH (location='s3a://ppgti/refined/');
 
 CREATE TABLE hive.refined.renda_vs_homicidios (
   sigla varchar,
-  periodo ARRAY(ROW(homicidios INT, renda INT, ano varchar))
+  ano varchar,
+  renda int,
+  homicidios int
 ) WITH (
   external_location='s3a://ppgti/refined/',
   format='AVRO'
