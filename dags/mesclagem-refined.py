@@ -111,9 +111,9 @@ with DAG(
         print(json.dumps(resultado_array))
         # FIM MESCLAGEM
 
-        # SALVAR LOCAL EM JSON
-        with open(f"{DIRETORIO_TMP}renda_vs_homicidios.json", "w") as outfile:
-            outfile.write(json.dumps(resultado_array))
+        # # SALVAR LOCAL EM JSON
+        # with open(f"{DIRETORIO_TMP}renda_vs_homicidios.json", "w") as outfile:
+        #     outfile.write(json.dumps(resultado_array))
 
         # SALVAR LOCAL EM AVRO
         schema = {
@@ -145,7 +145,7 @@ with DAG(
 
     @task(task_id="enviar_para_refined")
     def enviar_para_refined():
-        client.fput_object(BUCKET, f"{REFINED_LAYER}/renda_vs_homicidios.json", f"{DIRETORIO_TMP}renda_vs_homicidios.json")
+        # client.fput_object(BUCKET, f"{REFINED_LAYER}/renda_vs_homicidios.json", f"{DIRETORIO_TMP}renda_vs_homicidios.json")
         client.fput_object(BUCKET, f"{REFINED_LAYER}/renda_vs_homicidios.avro", f"{DIRETORIO_TMP}renda_vs_homicidios.avro")
 
     enviar_para_refined_step = enviar_para_refined()
